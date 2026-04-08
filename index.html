@@ -523,7 +523,7 @@
             }).join('');
         }
 
-        function updateMemberSummary() {
+       function updateMemberSummary() {
             const filtered = getFilteredExpenses();
             const totalLabel = document.getElementById('filteredTotalLabel');
             const list = document.getElementById('memberSummaryList');
@@ -543,8 +543,17 @@
                 return;
             }
 
-            const sortedSummary = members.map((m, idx) => ({...m, total: totals[idx]}))
+            // 0円より大きい人だけに絞り込み、学年順でソート
+            const sortedSummary = members
+                .map((m, idx) => ({...m, total: totals[idx]}))
+                .filter(m => m.total > 0) 
                 .sort((a, b) => (gradeOrder[a.grade] || 99) - (gradeOrder[b.grade] || 99) || a.name.localeCompare(b.name, 'ja'));
+
+            // 全員0円（記録なし）の場合の表示
+            if (sortedSummary.length === 0) {
+                list.innerHTML = '<p class="col-span-full text-slate-400 text-center py-6 text-xs italic">該当する支払い記録はありません</p>';
+                return;
+            }
 
             list.innerHTML = sortedSummary.map((m) => `
                 <div class="flex justify-between items-center bg-white p-3 px-4 rounded-xl border border-slate-200 shadow-sm">
@@ -552,10 +561,11 @@
                         <span class="text-[9px] font-bold text-slate-400 leading-none mb-1">${m.grade}</span>
                         <span class="text-xs font-bold text-slate-700">${m.name}</span>
                     </div>
-                    <span class="text-sm font-black ${m.total > 0 ? 'text-indigo-600' : 'text-slate-300'}">¥${m.total.toLocaleString()}</span>
+                    <span class="text-sm font-black text-indigo-600">¥${m.total.toLocaleString()}</span>
                 </div>
             `).join('');
         }
+        //
 
         function removeExpense(idx) {
             if (confirm("この記録を削除しますか？")) {
